@@ -1,0 +1,267 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>  
+    div.padded {  
+      padding-top: 0px;  
+      padding-right: 100px;  
+      padding-bottom: 0.25in;  
+      padding-left: 100px;  
+    }  
+  </style> 
+<title>Raymond Ly  |  CS 184</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+<br />
+<h1 align="middle">Assignment 3: PathTracer</h1>
+    <h2 align="middle">Raymond Ly</h2>
+
+    <div class="padded">
+        <p>In this portion of Assignment 3: Pathtracing, we implemented functionality that would allow Glass and Mirror-like surfaces to behave as they do in the real world. Alongside that, we also
+        simulated microfacet materials and the behavior light has with these microscopically rough surfaces through importance sampling using the Beckmann distrubution.
+            In the "bigger picture" of graphics, so to speak, we created functionality for global illumination, as to emulate realistic lighting environments under an infinitely far light source
+            emitting in all directions. Mechanically, we changed the way our rays and bounces behaved to refract through a lens, providing us the ability to render images
+            with depth of field, i.e. a sense of dimensionality where only things at focal distance from our lens is in focus while objects closer or further are blurry.
+        </p>
+
+    <h2 align="middle">Part 1: Mirror and Glass Materials</h2>
+        <p>To simulate mirror materials, we simply needed to reflect raycasts about our normal/viewing vector, since the assumption here is our material behaves
+        accordingly to specular reflection. The same cannot be said of glass materials, as there are both reflective and refractive properties to glass. To achieve this
+        behavior, we find the ray that results from light "bending" as it passing through space at the interface of two materials. Our model only allows us to generate and
+        display a single ray from this interface, so we use Schlick's approximation and random chance to determine which ray we return. Below, you can see several renders of
+        the same scene at increasing ray depth/max bounces.</p>
+        <div align="center">
+            <table style="width=100%">
+                <tr>Spheres rendered at 64 samples/pixel and 4 samples/light</tr>
+                <tr>
+                    <td align="middle">
+                    <img src="images/part1-1.png" width="480px" />
+                    <figcaption align="middle"> 0 Ray Bounces</figcaption>
+                    </td>
+                    <td align="middle">
+                    <img src="images/part1-2.png" width="480px" />
+                    <figcaption align="middle"> 1 Ray Bounce</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/part1-3.png" width="480px" />
+                        <figcaption align="middle"> 2 Ray Bounces</figcaption>
+                    </td>
+                    <td align="middle">
+                        <img src="images/part1-4.png" width="480px" />
+                        <figcaption align="middle"> 3 Ray Bounces</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/part1-5.png" width="480px" />
+                        <figcaption align="middle"> 4 Ray Bounces</figcaption>
+                    </td>
+                    <td align="middle">
+                        <img src="images/part1-6.png" width="480px" />
+                        <figcaption align="middle"> 5 Ray Bounces</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="middle" colspan="2">
+                        <img src="images/part1-7.png" width="480px" />
+                        <figcaption align="middle"> 100 Ray Bounces</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p>As you can see, as we increase the number of bounces, we begin to get artifacts, likely due to the fact that we my be reflecting the white light
+            more often when we don't need to. Of course, we can see the stark difference between 1, 2, and 3 bounces. At 1 bounce, we only see uncolored spheres, since
+            there is no further depth to how far we want to view our rays. At 2 bounces, notice how the sphere on the left still shows a black ceiling, so the ray depth
+            is not yet great enough to reflect the space it is in. At 3 bounces, we can clearly see the whole room is reflected in the left sphere  and the walls are passing though
+            in the right. However, if you look closely, the rays through the ball on the right are still yet to be reflected by the left. This detail only comes about at
+            a ray depth of 4 and onwards. From there, smaller details concerning lighting will come into view, such as the bright spot on the right wall through the right ball.
+        </p>
+
+        <h2 align="middle">Part 2: Microfacet Material</h2>
+        <p>Below, we can see 4 renders of the same scene at different alpha values. What we notice immediately is that the amount of noise and brightness of
+            the scene in general all increase as alpha increases. This gives us an overall cleaner, smoother, and more detailed resulting image. Specifically, looking
+            at alpha=.05 and alpha =.5, we can see that the dragon itself seems like a harsher reflective metal since the areas it reflects light are incredibly bright,
+            but the areas in the shadows are exceptionally dark. Meanwhile, at a higher alpha, the dragon displays a "softer" simulation of the material, but successfully
+            captures the shading as a gradient and details that are unrefined, such as the scales.</p>
+        <div align="center"; style="margin-top: 25px; margin-bottom: 25px";>
+            <table style="width=100%">
+                <tr>Gold Dragon rendered at 128 samples/pixel, 1 sample/light, ray depth of 5</tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/part2-1.png" width="480px" />
+                        <figcaption align="middle"> alpha = 0.005</figcaption>
+                    </td>
+                    <td align="middle">
+                        <img src="images/part2-2.png" width="480px" />
+                        <figcaption align="middle"> alpha = 0.05</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/part2-3.png" width="480px" />
+                        <figcaption align="middle"> alpha = 0.25</figcaption>
+                    </td>
+                    <td align="middle">
+                        <img src="images/part2-4.png" width="480px" />
+                        <figcaption align="middle"> alpha = 0.5</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <p>By inspection, it is clear to see that at the same render settings, the importance sampled bunny has far greater fidelity and detail with slightly less noise.
+            What we may notice is that the importance sampled bunny also displays an image that seems more "complete" than the cosine hemisphere sampled one, showing
+            us it converges to the real image far faster.</p>
+        <div align="center"; style="margin-top: 25px">
+            <table style="width=100%">
+                <tr><td align="middle" colspan="2"> Comparing Uniform Hemisphere and Importance Sampling</td></tr>
+                <tr><td align="middle" colspan="2">Copper Bunny rendered at 64 samples/pixel, 1 sample/light, ray depth of 5</td></tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/part2-hemisphere.png" width="480px" />
+                        <figcaption align="middle"> Uniform Hemisphere Sampling</figcaption>
+                    </td>
+                    <td align="middle">
+                        <img src="images/part2-importance.png" width="480px" />
+                        <figcaption align="middle"> Importance Sampling</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div align="center"; style="margin-top: 50px">
+            <table style="width=100%">
+                <tr><td align="middle" colspan="2"> Tungsten Dragon</td></tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/part2-tungsten.png" width="480px" />
+                        <figcaption align="middle"> eta = 0.96709 1.3573 2.1893</figcaption>
+                        <figcaption align="middle"> k = 6.2738 5.2210 5.0244</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <h2 align="middle">Part 3: Environment Light</h2>
+        <p>The concept of environment lighting we are implementing is that an "infinitely" distant light source illuminates the scene by casting light in every
+        direction on its surface. Equivalently, we can consider the Sun illuminating our surroundings as the source of global illumination in our scenes.
+        </p>
+
+        <div align="center"; style="margin-top: 25px">
+            <table style="width=100%">
+                <tr><td align="middle" colspan="2"> Environment: Grace</td></tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/grace.png" width="480px" />
+                    </td>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/probability_debug.png" width="480px" />
+                        <figcaption align="middle"> Probability Debug for grace.exr</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div align="center"; style="margin-top: 25px">
+        <table style="width=100%">
+            <tr><td align="middle" colspan="2"> Comparing Uniform Hemisphere and Importance Sampling on Environment</td></tr>
+            <tr><td align="middle" colspan="2">Unlit Bunny rendered at 4 samples/pixel, 64 sample/light</td></tr>
+            <tr>
+                <td align="middle">
+                    <img src="images/part3_unlit_uniform.png" width="480px" />
+                    <figcaption align="middle"> Uniform Hemisphere Sampling</figcaption>
+                </td>
+                <td align="middle">
+                    <img src="images/part3_unlit_importance.png" width="480px" />
+                    <figcaption align="middle"> Importance Sampling</figcaption>
+                </td>
+            </tr>
+            <tr><td align="middle" colspan="2">Unlit Copper Bunny rendered at 4 samples/pixel, 64 sample/light</td></tr>
+            <tr>
+                <td align="middle">
+                    <img src="images/part3_micro_uniform.png" width="480px" />
+                    <figcaption align="middle"> Uniform Hemisphere Sampling</figcaption>
+                </td>
+                <td align="middle">
+                    <img src="images/part3_micro_importance.png" width="480px" />
+                    <figcaption align="middle"> Importance Sampling</figcaption>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+        <h2 align="middle">Part 4: Depth of Field</h2>
+        <p>To simulate depth of field, we implemented functionality for a thin lens camera. Up until this point, we have been working with a pinhole camera, which
+        is basically just a thin lens camera with an aperture of 0. This means, when viewing images, a pinhole camera keeps all objects in focus and at high enough
+        settings, every object would be clean and sharp. However, that does not reflect what cameras and human eyes perceive in reality. We have finite windows through
+        which to view the world, so to speak, so only a limited amount of light and distance can be percieved on a cameras sensor or our retinas. We simulate a thin
+        lens by refracting light at distance in front of our camera and project the ray from the lens to objects at focal distance. Anything closer or further than
+        the focal distance becomes blurry and unfocused, similarly to how a real camera would detect objects in space. </p>
+        <div align="center"; style="margin-top: 25px">
+            <table style="width=100%">
+                <tr>
+                    <td align="middle"> Varying Aperture</td>
+                <td align="middle">Focus Stack</td>
+                <tr>
+                    <td align="middle">
+                        <img src="images/p4a1.png" width="480px" />
+                        <figcaption align="middle"> Aperture = 0.1</figcaption>
+                        <figcaption align="middle"> Focal Distance = 4.7</figcaption>
+                    </td>
+                    <td align="middle">
+                        <img src="images/p4f1.png" width="480px" />
+                        <figcaption align="middle"> Aperture = 0.25</figcaption>
+                        <figcaption align="middle"> Focal Distance = 1.3</figcaption>
+                    </td>
+            </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/p4a2.png" width="480px" />
+                        <figcaption align="middle"> Aperture = 0.4</figcaption>
+                        <figcaption align="middle"> Focal Distance = 4.7</figcaption>
+                    </td>
+                    <td align="middle">
+                        <img src="images/p4f2.png" width="480px" />
+                        <figcaption align="middle"> Aperture = 0.25</figcaption>
+                        <figcaption align="middle"> Focal Distance = 6.7</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/p4a3.png" width="480px" />
+                        <figcaption align="middle"> Aperture = 1.6</figcaption>
+                        <figcaption align="middle"> Focal Distance = 4.7</figcaption>
+                    </td>
+                    <td align="middle">
+                        <img src="images/p4f3.png" width="480px" />
+                        <figcaption align="middle"> Aperture = 0.25</figcaption>
+                        <figcaption align="middle"> Focal Distance = 3.9</figcaption>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="middle">
+                        <img src="images/p4a4.png" width="480px" />
+                        <figcaption align="middle"> Aperture = 6.7</figcaption>
+                        <figcaption align="middle"> Focal Distance = 4.7</figcaption>
+                    </td>
+                    <td align="middle">
+                        <img src="images/p4f4.png" width="480px" />
+                        <figcaption align="middle"> Aperture = 0.25</figcaption>
+                        <figcaption align="middle"> Focal Distance = 12.7</figcaption>
+                    </td>
+                </tr>
+            </table>
+        </div>
+</div>
+</body>
+</html>
+
+
+
+
